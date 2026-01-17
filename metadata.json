@@ -1,0 +1,8 @@
+{
+  "name": "VidScribe AI - Video to Text Converter",
+  "description": "A high-performance video-to-text transcription tool supporting English and Bangla with AI-powered summarization, speaker detection, and SRT export.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
