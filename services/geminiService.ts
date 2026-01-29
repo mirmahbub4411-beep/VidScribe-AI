@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { TranscriptionResult, AppSettings } from "../types";
+import { TranscriptionResult, AppSettings } from "../types.ts";
 
 const API_KEY = process.env.API_KEY || '';
 
@@ -9,6 +9,10 @@ export const transcribeVideo = async (
   mimeType: string,
   settings: AppSettings
 ): Promise<TranscriptionResult> => {
+  if (!API_KEY) {
+    console.error("API_KEY is missing. Make sure to set it in Netlify Environment Variables.");
+  }
+
   const ai = new GoogleGenAI({ apiKey: API_KEY });
   
   const prompt = `

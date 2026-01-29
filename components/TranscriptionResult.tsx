@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
-import { Copy, Download, FileText, Languages, History, BrainCircuit } from 'lucide-react';
-import { TranscriptionResult, AppSettings } from '../types';
+import { Copy, FileText, Languages, History, BrainCircuit } from 'lucide-react';
+import { TranscriptionResult, AppSettings } from '../types.ts';
 
 interface TranscriptionResultViewProps {
   result: TranscriptionResult;

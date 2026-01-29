@@ -1,16 +1,22 @@
 
-import React, { useState, useRef } from 'react';
-import { Upload, FileVideo, X, CheckCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Upload, FileVideo, FileAudio, X } from 'lucide-react';
 
 interface FileUploadProps {
   onFileSelect: (file: File) => void;
   isProcessing: boolean;
+  acceptType: 'video' | 'audio';
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, acceptType }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Clear file when switching tools
+  useEffect(() => {
+    setFile(null);
+  }, [acceptType]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -47,9 +53,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing }) =
   };
 
   const validateFile = (file: File) => {
-    const validTypes = ['video/mp4', 'video/x-matroska', 'video/quicktime', 'video/x-msvideo'];
+    const videoTypes = ['video/mp4', 'video/x-matroska', 'video/quicktime', 'video/x-msvideo'];
+    const audioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/aac', 'audio/m4a'];
+    
+    const validTypes = acceptType === 'video' ? videoTypes : audioTypes;
+    
     if (!validTypes.includes(file.type)) {
-      alert("Please upload a valid video file (MP4, MKV, MOV, or AVI)");
+      alert(`Please upload a valid ${acceptType} file`);
       return false;
     }
     if (file.size > 500 * 1024 * 1024) {
@@ -72,19 +82,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing }) =
       <input
         ref={inputRef}
         type="file"
-        accept="video/mp4,video/x-matroska,video/quicktime,video/x-msvideo"
+        accept={acceptType === 'video' ? "video/*" : "audio/*"}
         className="hidden"
         onChange={handleChange}
       />
 
       <div className="flex flex-col items-center justify-center space-y-4">
         {file ? (
-          <div className="flex items-center space-x-3 text-blue-600 font-medium">
-            <FileVideo className="w-8 h-8" />
-            <span>{file.name}</span>
+          <div className="flex items-center space-x-3 text-blue-600 font-medium animate-in fade-in zoom-in duration-300">
+            {acceptType === 'video' ? <FileVideo className="w-8 h-8" /> : <FileAudio className="w-8 h-8" />}
+            <span className="truncate max-w-[200px]">{file.name}</span>
             <button 
-              onClick={() => setFile(null)}
-              className="p-1 hover:bg-red-50 text-red-500 rounded-full"
+              onClick={(e) => { e.stopPropagation(); setFile(null); }}
+              className="p-1 hover:bg-red-50 text-red-500 rounded-full transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -92,15 +102,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing }) =
         ) : (
           <>
             <div className="p-4 bg-blue-50 rounded-full">
-              <Upload className="w-10 h-10 text-blue-600" />
+              {acceptType === 'video' ? <FileVideo className="w-10 h-10 text-blue-600" /> : <FileAudio className="w-10 h-10 text-blue-600" />}
             </div>
             <div>
-              <p className="text-xl font-semibold text-gray-800">Drag & Drop Video</p>
-              <p className="text-sm text-gray-500 mt-1">MP4, MKV, MOV, AVI up to 500MB</p>
+              <p className="text-xl font-semibold text-gray-800">Drag & Drop {acceptType === 'video' ? 'Video' : 'Audio'}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                {acceptType === 'video' ? 'MP4, MKV, MOV, AVI' : 'MP3, WAV, M4A, AAC'} up to 500MB
+              </p>
             </div>
             <button
               onClick={() => inputRef.current?.click()}
-              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-bold"
             >
               Browse Files
             </button>
