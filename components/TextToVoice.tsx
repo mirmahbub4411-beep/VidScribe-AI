@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Play, Square, Download, AudioLines, Sparkles, MessageSquareText, Settings2, Info, Loader2, User, UserCheck } from 'lucide-react';
+import { Play, Square, Download, AudioLines, Sparkles, MessageSquareText, Settings2, Info, Loader2, User, UserCheck, AlertCircle, TrendingUp } from 'lucide-react';
 import { generateSpeech } from '../services/geminiService.ts';
 
 // Helper for base64 decoding
@@ -80,7 +80,14 @@ const VOICES = [
   { id: 'Puck', name: 'Elderly Female (Dadi)', icon: '👵', type: 'female', persona: 'elderly' },
 ];
 
-const TextToVoice: React.FC = () => {
+interface TextToVoiceProps {
+  minutesUsed: number;
+  limitMinutes: number;
+  onUsageUpdate: (minutes: number) => void;
+  onUpgrade: () => void;
+}
+
+const TextToVoice: React.FC<TextToVoiceProps> = ({ minutesUsed, limitMinutes, onUsageUpdate, onUpgrade }) => {
   const [text, setText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState(0);
@@ -89,6 +96,8 @@ const TextToVoice: React.FC = () => {
   const [audioBuffer, setAudioBuffer] = useState<AudioBuffer | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
+
+  const isLimitReached = minutesUsed >= limitMinutes;
 
   useEffect(() => {
     let interval: number;
@@ -103,6 +112,11 @@ const TextToVoice: React.FC = () => {
 
   const handleGenerate = async () => {
     if (!text) return;
+
+    if (isLimitReached) {
+      onUpgrade();
+      return;
+    }
     
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -133,6 +147,10 @@ const TextToVoice: React.FC = () => {
       
       setAudioBuffer(buffer);
       setGenProgress(100);
+
+      // Track usage based on audio duration
+      const durationInMinutes = buffer.duration / 60;
+      onUsageUpdate(durationInMinutes);
       
       setTimeout(() => {
         setIsGenerating(false);
@@ -182,7 +200,14 @@ const TextToVoice: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <header className="text-center">
         <h2 className="text-3xl md:text-4xl font-black text-gray-900">AI <span className="text-blue-600">Voice</span> Studio</h2>
-        <p className="mt-2 text-gray-500 font-medium">Dhaka City Accent • Multi-Generation Voices • Share Ready</p>
+        <p className="mt-2 text-gray-500 font-medium italic">Dhaka City Accent • Multi-Generation Voices • Share Ready</p>
+        
+        <div className={`mt-6 inline-flex items-center space-x-2 px-6 py-2.5 rounded-full text-sm font-bold border shadow-sm animate-in slide-in-from-top-2 duration-300 ${isLimitReached ? 'bg-red-50 text-red-700 border-red-100' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+          {isLimitReached ? <AlertCircle className="w-4 h-4" /> : <Info className="w-4 h-4" />}
+          <span className="tracking-tight">
+            {isLimitReached ? "20-minute limit reached. Please upgrade." : `Text to Voice Free Usage: ${Math.round(minutesUsed * 10) / 10} / ${limitMinutes} min`}
+          </span>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -203,7 +228,7 @@ const TextToVoice: React.FC = () => {
               placeholder="এখানে আপনার টেক্সট লিখুন... যেমন: আসসালামু আলাইকুম দাদু, কেমন আছেন?"
               value={text}
               onChange={(e) => setText(e.target.value)}
-              disabled={isGenerating}
+              disabled={isGenerating || isLimitReached}
             />
 
             {isGenerating && (
@@ -255,15 +280,19 @@ const TextToVoice: React.FC = () => {
                 onClick={handleGenerate}
                 disabled={!text || isGenerating}
                 className={`px-12 py-5 rounded-2xl font-black text-lg flex items-center space-x-3 shadow-2xl transition-all active:scale-95 ${
-                  !text || isGenerating 
+                  !text || isGenerating || isLimitReached
                   ? "bg-gray-100 text-gray-300 cursor-not-allowed border border-gray-200" 
                   : "bg-blue-600 text-white hover:bg-blue-700 border-b-4 border-blue-800"
                 }`}
               >
                 {isGenerating ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                   <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Generate Voice</span>
+                    {isLimitReached ? (
+                      <TrendingUp className="w-5 h-5" />
+                    ) : (
+                      <Sparkles className="w-5 h-5" />
+                    )}
+                    <span>{isLimitReached ? 'Upgrade Now' : 'Generate Voice'}</span>
                   </>
                 )}
               </button>

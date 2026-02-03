@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   Settings as SettingsIcon, 
-  Check, 
   Zap, 
   BarChart3, 
   Mic2, 
@@ -37,6 +36,7 @@ import { AppSettings, ProcessingStatus, TranscriptionResult, User, HistoryItem, 
 import { transcribeVideo } from './services/geminiService.ts';
 
 const AUDIO_LIMIT_MINUTES = 15;
+const TTS_LIMIT_MINUTES = 20;
 
 const PACKAGES: Package[] = [
   { id: '15d', name: 'Starter Pro', duration: '15 Days', bdt: 250, usd: 2 },
@@ -57,6 +57,7 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isOtherAppsOpen, setIsOtherAppsOpen] = useState(false);
   const [audioMinutesUsed, setAudioMinutesUsed] = useState(0);
+  const [ttsMinutesUsed, setTtsMinutesUsed] = useState(0);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedPkg, setSelectedPkg] = useState<Package | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -175,6 +176,10 @@ const App: React.FC = () => {
     setIsPaymentModalOpen(true);
   };
 
+  const handleTtsUsageUpdate = (minutes: number) => {
+    setTtsMinutesUsed(prev => Math.min(prev + minutes, TTS_LIMIT_MINUTES));
+  };
+
   const renderContent = () => {
     if (view === 'profile' && currentUser) {
       return <UserProfile user={currentUser} onBack={() => setView('transcribe')} />;
@@ -189,7 +194,14 @@ const App: React.FC = () => {
     }
 
     if (activeTool === 'tts') {
-      return <TextToVoice />;
+      return (
+        <TextToVoice 
+          minutesUsed={ttsMinutesUsed} 
+          limitMinutes={TTS_LIMIT_MINUTES} 
+          onUsageUpdate={handleTtsUsageUpdate}
+          onUpgrade={() => setView('pricing')}
+        />
+      );
     }
 
     return (
@@ -220,7 +232,7 @@ const App: React.FC = () => {
             <FileUpload 
               onFileSelect={handleFileSelect} 
               isProcessing={status !== 'idle' && status !== 'success' && status !== 'error'} 
-              acceptType={activeTool as 'video' | 'audio'}
+              acceptType={activeTool === 'video' || activeTool === 'audio' ? activeTool : 'video'}
             />
             
             {(status !== 'idle' && !result) && (

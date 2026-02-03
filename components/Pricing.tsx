@@ -44,7 +44,7 @@ const Pricing: React.FC<PricingProps> = ({ onSubscribe, packages }) => {
 
             <div className="space-y-4 mb-8">
               {[
-                "Unlimited Audio to Text",
+                "Unlimited Text to Audio",
                 "Up to 2GB File Support",
                 "Priority AI Processing",
                 "Speaker Identification",
