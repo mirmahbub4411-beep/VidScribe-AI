@@ -22,7 +22,8 @@ import {
   Info,
   AlertCircle,
   TrendingUp,
-  CreditCard
+  CreditCard,
+  MessageSquareText
 } from 'lucide-react';
 import FileUpload from './components/FileUpload.tsx';
 import TranscriptionResultView from './components/TranscriptionResult.tsx';
@@ -31,6 +32,7 @@ import UserProfile from './components/UserProfile.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import Pricing from './components/Pricing.tsx';
 import PaymentModal from './components/PaymentModal.tsx';
+import TextToVoice from './components/TextToVoice.tsx';
 import { AppSettings, ProcessingStatus, TranscriptionResult, User, HistoryItem, ActiveTool, AppView, Package } from './types.ts';
 import { transcribeVideo } from './services/geminiService.ts';
 
@@ -186,6 +188,10 @@ const App: React.FC = () => {
       return <Pricing onSubscribe={handleSubscribe} packages={PACKAGES} />;
     }
 
+    if (activeTool === 'tts') {
+      return <TextToVoice />;
+    }
+
     return (
       <>
         <header className="text-center mb-12 animate-in fade-in duration-700">
@@ -214,7 +220,7 @@ const App: React.FC = () => {
             <FileUpload 
               onFileSelect={handleFileSelect} 
               isProcessing={status !== 'idle' && status !== 'success' && status !== 'error'} 
-              acceptType={activeTool}
+              acceptType={activeTool as 'video' | 'audio'}
             />
             
             {(status !== 'idle' && !result) && (
@@ -420,6 +426,19 @@ const App: React.FC = () => {
                     <div>
                       <p className="font-bold text-gray-900">Audio to Text</p>
                       <p className="text-[10px] text-gray-400 tracking-tight">Transcribe MP3, WAV, M4A</p>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => { setActiveTool('tts'); setView('tts'); setIsOtherAppsOpen(false); }}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left transition-colors group ${activeTool === 'tts' ? 'bg-blue-50' : ''}`}
+                  >
+                    <div className={`p-2 rounded-lg transition-colors ${activeTool === 'tts' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white'}`}>
+                      <MessageSquareText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">Text to Voice</p>
+                      <p className="text-[10px] text-gray-400 tracking-tight">Dhaka City Accent Voice</p>
                     </div>
                   </button>
 

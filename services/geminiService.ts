@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { TranscriptionResult, AppSettings } from "../types.ts";
 
 const API_KEY = process.env.API_KEY || '';
@@ -10,7 +10,7 @@ export const transcribeVideo = async (
   settings: AppSettings
 ): Promise<TranscriptionResult> => {
   if (!API_KEY) {
-    console.error("API_KEY is missing. Make sure to set it in Netlify Environment Variables.");
+    console.error("API_KEY is missing.");
   }
 
   const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -68,5 +68,32 @@ export const transcribeVideo = async (
   } catch (error) {
     console.error("Transcription Error:", error);
     throw new Error("Failed to process transcription via AI.");
+  }
+};
+
+export const generateSpeech = async (text: string, voiceName: string = 'Kore'): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash-preview-tts",
+      contents: [{ parts: [{ text }] }],
+      config: {
+        responseModalities: [Modality.AUDIO],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName },
+          },
+        },
+      },
+    });
+
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) throw new Error("No audio data returned from API");
+    
+    return base64Audio;
+  } catch (error) {
+    console.error("TTS Error:", error);
+    throw error;
   }
 };

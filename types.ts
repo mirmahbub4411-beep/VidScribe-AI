@@ -12,9 +12,9 @@ export interface TranscriptionResult {
   detectedLanguage: string;
 }
 
-export type ProcessingStatus = 'idle' | 'uploading' | 'extracting' | 'transcribing' | 'finalizing' | 'success' | 'error';
-export type ActiveTool = 'video' | 'audio';
-export type AppView = 'transcribe' | 'dashboard' | 'profile' | 'pricing';
+export type ProcessingStatus = 'idle' | 'uploading' | 'extracting' | 'transcribing' | 'finalizing' | 'success' | 'error' | 'generating';
+export type ActiveTool = 'video' | 'audio' | 'tts';
+export type AppView = 'transcribe' | 'dashboard' | 'profile' | 'pricing' | 'tts';
 
 export interface AppSettings {
   showTimestamps: boolean;
