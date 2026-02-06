@@ -2,9 +2,6 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { TranscriptionResult, AppSettings } from "../types.ts";
 
-// Note: process.env.API_KEY is used directly within functions to ensure the latest key is used.
-const API_KEY = process.env.API_KEY || '';
-
 /**
  * Transcribes video or audio content using Gemini AI.
  */
@@ -99,6 +96,36 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore'): 
     console.error("TTS Error:", error);
     throw error;
   }
+};
+
+/**
+ * Enhanced Audio: Transcribes and then re-synthesizes for clean output.
+ */
+export const enhanceAudio = async (
+  base64Audio: string,
+  mimeType: string,
+  voiceId: string
+): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  // 1. Transcribe the noisy audio
+  const transcribeResponse = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: [
+      {
+        parts: [
+          { text: "Transcribe this audio accurately. Output ONLY the plain text transcription." },
+          { inlineData: { data: base64Audio, mimeType } }
+        ]
+      }
+    ]
+  });
+
+  const cleanText = transcribeResponse.text || "";
+  if (!cleanText) throw new Error("Could not understand audio");
+
+  // 2. Use TTS to output perfectly clean audio with selected voice
+  return await generateSpeech(cleanText, voiceId);
 };
 
 /**

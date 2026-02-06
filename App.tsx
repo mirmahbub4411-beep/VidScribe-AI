@@ -25,7 +25,8 @@ import {
   MessageSquareText,
   Menu,
   X,
-  Clapperboard
+  Clapperboard,
+  Waves
 } from 'lucide-react';
 import FileUpload from './components/FileUpload.tsx';
 import TranscriptionResultView from './components/TranscriptionResult.tsx';
@@ -36,6 +37,7 @@ import Pricing from './components/Pricing.tsx';
 import PaymentModal from './components/PaymentModal.tsx';
 import TextToVoice from './components/TextToVoice.tsx';
 import ImageToVideo from './components/ImageToVideo.tsx';
+import VoiceEnhancer from './components/VoiceEnhancer.tsx';
 import { AppSettings, ProcessingStatus, TranscriptionResult, User, HistoryItem, ActiveTool, AppView, Package } from './types.ts';
 import { transcribeVideo } from './services/geminiService.ts';
 
@@ -66,7 +68,8 @@ const App: React.FC = () => {
     video: 0,
     audio: 0,
     tts: 0,
-    veo: 0
+    veo: 0,
+    enhancer: 0
   });
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -109,6 +112,7 @@ const App: React.FC = () => {
     if (activeTool === 'video') return usage.video;
     if (activeTool === 'audio') return usage.audio;
     if (activeTool === 'tts') return usage.tts;
+    if (activeTool === 'enhancer') return usage.enhancer;
     return usage.veo;
   }, [activeTool, usage]);
 
@@ -158,7 +162,6 @@ const App: React.FC = () => {
               };
               setHistory(prev => [newHistoryItem, ...prev]);
 
-              // Update usage (estimated 0.2 mins per conversion if duration not known)
               setUsage(prev => ({
                 ...prev,
                 [activeTool]: Math.min(prev[activeTool as keyof typeof prev] + 0.5, GLOBAL_FREE_LIMIT)
@@ -204,14 +207,9 @@ const App: React.FC = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handleTtsUsageUpdate = (minutes: number) => {
+  const handleUsageUpdate = (minutes: number) => {
     if (currentUser) return;
-    setUsage(prev => ({ ...prev, tts: Math.min(prev.tts + minutes, GLOBAL_FREE_LIMIT) }));
-  };
-
-  const handleVeoUsageUpdate = (minutes: number) => {
-    if (currentUser) return;
-    setUsage(prev => ({ ...prev, veo: Math.min(prev.veo + minutes, GLOBAL_FREE_LIMIT) }));
+    setUsage(prev => ({ ...prev, [activeTool]: Math.min(prev[activeTool as keyof typeof prev] + minutes, GLOBAL_FREE_LIMIT) }));
   };
 
   const renderContent = () => {
@@ -242,7 +240,7 @@ const App: React.FC = () => {
         <TextToVoice 
           minutesUsed={usage.tts} 
           limitMinutes={GLOBAL_FREE_LIMIT} 
-          onUsageUpdate={handleTtsUsageUpdate}
+          onUsageUpdate={(m) => handleUsageUpdate(m)}
           onUpgrade={() => setView('pricing')}
           isPro={!!currentUser}
         />
@@ -254,7 +252,19 @@ const App: React.FC = () => {
         <ImageToVideo 
           minutesUsed={usage.veo}
           limitMinutes={GLOBAL_FREE_LIMIT}
-          onUsageUpdate={handleVeoUsageUpdate}
+          onUsageUpdate={(m) => handleUsageUpdate(m)}
+          onUpgrade={() => setView('pricing')}
+          isPro={!!currentUser}
+        />
+      );
+    }
+
+    if (activeTool === 'enhancer') {
+      return (
+        <VoiceEnhancer 
+          minutesUsed={usage.enhancer}
+          limitMinutes={GLOBAL_FREE_LIMIT}
+          onUsageUpdate={(m) => handleUsageUpdate(m)}
           onUpgrade={() => setView('pricing')}
           isPro={!!currentUser}
         />
@@ -430,6 +440,10 @@ const App: React.FC = () => {
                     <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><Clapperboard className="w-4 h-4" /></div>
                     <div><p className="font-bold text-gray-900">Image to Video</p></div>
                   </button>
+                  <button onClick={() => { setActiveTool('enhancer'); setView('enhancer'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50">
+                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600"><Waves className="w-4 h-4" /></div>
+                    <div><p className="font-bold text-gray-900">Voice Enhancer</p></div>
+                  </button>
                 </div>
               )}
             </div>
@@ -460,11 +474,12 @@ const App: React.FC = () => {
           <div className="absolute inset-0 bg-gray-900/40" onClick={() => setIsMobileMenuOpen(false)}></div>
           <div className="absolute right-0 top-0 h-full w-4/5 max-w-sm bg-white p-6 flex flex-col">
             <div className="flex justify-between items-center mb-10 border-b pb-4"><span className="font-bold text-gray-400 uppercase text-xs">Menu</span><button onClick={() => setIsMobileMenuOpen(false)}><X className="w-5 h-5" /></button></div>
-            <div className="space-y-4 overflow-y-auto flex-1">
+            <div className="space-y-4 overflow-y-auto flex-1 text-sm">
               <button onClick={() => { setActiveTool('video'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><FileVideo className="w-5 h-5" /><span>Video to Text</span></button>
               <button onClick={() => { setActiveTool('audio'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><AudioLines className="w-5 h-5" /><span>Audio to Text</span></button>
               <button onClick={() => { setActiveTool('tts'); setView('tts'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><MessageSquareText className="w-5 h-5" /><span>Text to Voice</span></button>
               <button onClick={() => { setActiveTool('image-to-video'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><Clapperboard className="w-5 h-5" /><span>Image to Video</span></button>
+              <button onClick={() => { setActiveTool('enhancer'); setView('enhancer'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><Waves className="w-5 h-5" /><span>Voice Enhancer</span></button>
               {currentUser && <button onClick={() => setView('dashboard')} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><LayoutDashboard className="w-5 h-5" /><span>Dashboard</span></button>}
               <button onClick={() => setView('pricing')} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><CreditCard className="w-5 h-5" /><span>Pricing</span></button>
             </div>
@@ -476,7 +491,7 @@ const App: React.FC = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 lg:hidden flex justify-around items-center py-2 px-2 z-[80] shadow-lg">
         <button onClick={() => { setActiveTool('video'); setView('transcribe'); }} className={`flex flex-col items-center p-2 rounded-xl ${activeTool === 'video' && view === 'transcribe' ? 'text-blue-600' : 'text-gray-400'}`}><FileVideo className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Video</span></button>
         <button onClick={() => { setActiveTool('audio'); setView('transcribe'); }} className={`flex flex-col items-center p-2 rounded-xl ${activeTool === 'audio' && view === 'transcribe' ? 'text-blue-600' : 'text-gray-400'}`}><AudioLines className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Audio</span></button>
-        <button onClick={() => setView('tts')} className={`flex flex-col items-center p-2 rounded-xl ${view === 'tts' ? 'text-blue-600' : 'text-gray-400'}`}><MessageSquareText className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Voice</span></button>
+        <button onClick={() => setView('enhancer')} className={`flex flex-col items-center p-2 rounded-xl ${view === 'enhancer' ? 'text-blue-600' : 'text-gray-400'}`}><Waves className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Clean</span></button>
         {currentUser && <button onClick={() => setView('dashboard')} className={`flex flex-col items-center p-2 rounded-xl ${view === 'dashboard' ? 'text-blue-600' : 'text-gray-400'}`}><LayoutDashboard className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Stats</span></button>}
       </div>
 
