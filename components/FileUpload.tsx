@@ -34,7 +34,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, acc
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const droppedFile = e.dataTransfer.files[0];
-      if (validateFile(droppedFile)) {
+      if (droppedFile && validateFile(droppedFile)) {
         setFile(droppedFile);
         onFileSelect(droppedFile);
       }
@@ -45,7 +45,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, acc
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (validateFile(selectedFile)) {
+      if (selectedFile && validateFile(selectedFile)) {
         setFile(selectedFile);
         onFileSelect(selectedFile);
       }
@@ -54,11 +54,17 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, acc
 
   const validateFile = (file: File) => {
     const videoTypes = ['video/mp4', 'video/x-matroska', 'video/quicktime', 'video/x-msvideo'];
-    const audioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/aac', 'audio/m4a'];
+    const audioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3', 'audio/ogg', 'audio/aac', 'audio/m4p', 'audio/m4a'];
     
     const validTypes = acceptType === 'video' ? videoTypes : audioTypes;
     
-    if (!validTypes.includes(file.type)) {
+    // Fallback validation for mobile where mime type might be different
+    const isVideoExtension = ['mp4', 'mkv', 'mov', 'avi'].some(ext => file.name.toLowerCase().endsWith(ext));
+    const isAudioExtension = ['mp3', 'wav', 'm4a', 'aac', 'ogg'].some(ext => file.name.toLowerCase().endsWith(ext));
+
+    const isValid = acceptType === 'video' ? (validTypes.includes(file.type) || isVideoExtension) : (validTypes.includes(file.type) || isAudioExtension);
+
+    if (!isValid) {
       alert(`Please upload a valid ${acceptType} file`);
       return false;
     }
@@ -71,7 +77,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, acc
 
   return (
     <div 
-      className={`relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300 text-center ${
+      className={`relative border-2 border-dashed rounded-2xl p-6 md:p-10 transition-all duration-300 text-center ${
         dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-white"
       } ${isProcessing ? "opacity-50 pointer-events-none" : "hover:border-blue-400"}`}
       onDragEnter={handleDrag}
@@ -87,34 +93,34 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isProcessing, acc
         onChange={handleChange}
       />
 
-      <div className="flex flex-col items-center justify-center space-y-4">
+      <div className="flex flex-col items-center justify-center space-y-3 md:space-y-4">
         {file ? (
-          <div className="flex items-center space-x-3 text-blue-600 font-medium animate-in fade-in zoom-in duration-300">
-            {acceptType === 'video' ? <FileVideo className="w-8 h-8" /> : <FileAudio className="w-8 h-8" />}
-            <span className="truncate max-w-[200px]">{file.name}</span>
+          <div className="flex items-center space-x-3 text-blue-600 font-medium animate-in fade-in zoom-in duration-300 bg-blue-50 px-4 py-3 rounded-xl border border-blue-100">
+            {acceptType === 'video' ? <FileVideo className="w-6 h-6 md:w-8 md:h-8" /> : <FileAudio className="w-6 h-6 md:w-8 md:h-8" />}
+            <span className="truncate max-w-[150px] md:max-w-[250px] text-xs md:text-sm font-bold">{file.name}</span>
             <button 
               onClick={(e) => { e.stopPropagation(); setFile(null); }}
-              className="p-1 hover:bg-red-50 text-red-500 rounded-full transition-colors"
+              className="p-1.5 hover:bg-red-50 text-red-500 rounded-full transition-colors shrink-0"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         ) : (
           <>
-            <div className="p-4 bg-blue-50 rounded-full">
-              {acceptType === 'video' ? <FileVideo className="w-10 h-10 text-blue-600" /> : <FileAudio className="w-10 h-10 text-blue-600" />}
+            <div className="p-3 md:p-4 bg-blue-50 rounded-full">
+              {acceptType === 'video' ? <FileVideo className="w-8 h-8 md:w-10 md:h-10 text-blue-600" /> : <FileAudio className="w-8 h-8 md:w-10 md:h-10 text-blue-600" />}
             </div>
             <div>
-              <p className="text-xl font-semibold text-gray-800">Drag & Drop {acceptType === 'video' ? 'Video' : 'Audio'}</p>
-              <p className="text-sm text-gray-500 mt-1">
-                {acceptType === 'video' ? 'MP4, MKV, MOV, AVI' : 'MP3, WAV, M4A, AAC'} up to 500MB
+              <p className="text-lg md:text-xl font-bold text-gray-800">Select {acceptType === 'video' ? 'Video' : 'Audio'}</p>
+              <p className="text-[10px] md:text-xs text-gray-400 mt-1 uppercase font-bold tracking-widest">
+                {acceptType === 'video' ? 'MP4, MKV, MOV' : 'MP3, WAV, M4A'} • 500MB MAX
               </p>
             </div>
             <button
               onClick={() => inputRef.current?.click()}
-              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-bold"
+              className="mt-2 md:mt-4 px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg font-black text-sm active:scale-95"
             >
-              Browse Files
+              Choose File
             </button>
           </>
         )}

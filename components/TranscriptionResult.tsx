@@ -43,57 +43,62 @@ const TranscriptionResultView: React.FC<TranscriptionResultViewProps> = ({ resul
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center space-x-2">
-          <Languages className="text-blue-600 w-5 h-5" />
-          <span className="font-semibold text-gray-700 capitalize">Detected: {result.detectedLanguage}</span>
+        <div className="flex items-center space-x-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm w-fit">
+          <Languages className="text-blue-600 w-4 h-4" />
+          <span className="font-bold text-gray-700 text-xs md:text-sm capitalize">Language: {result.detectedLanguage}</span>
         </div>
         
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={copyToClipboard}
-            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm font-medium"
+            className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors text-xs font-bold"
           >
             <Copy className="w-4 h-4" />
             <span>Copy</span>
           </button>
           <button 
             onClick={downloadTxt}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors text-sm font-medium border border-blue-200"
+            className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors text-xs font-bold border border-blue-200"
           >
             <FileText className="w-4 h-4" />
-            <span>.TXT</span>
+            <span>TXT</span>
           </button>
           <button 
             onClick={downloadSrt}
-            className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors text-sm font-medium border border-green-200"
+            className="flex-1 md:flex-none flex items-center justify-center space-x-2 px-4 py-2.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-xl transition-colors text-xs font-bold border border-green-200"
           >
             <History className="w-4 h-4" />
-            <span>.SRT</span>
+            <span>SRT</span>
           </button>
         </div>
       </div>
 
       {result.summary && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100 shadow-sm">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 md:p-6 rounded-2xl border border-blue-100 shadow-sm">
           <div className="flex items-center space-x-2 mb-3">
-            <BrainCircuit className="text-blue-600 w-5 h-5" />
-            <h3 className="font-bold text-blue-900">AI Summary</h3>
+            <BrainCircuit className="text-blue-600 w-4 h-4 md:w-5 md:h-5" />
+            <h3 className="font-black text-blue-900 text-sm md:text-base uppercase tracking-wider">AI Summary</h3>
           </div>
-          <p className="text-blue-800 leading-relaxed italic">{result.summary}</p>
+          <p className="text-blue-800 text-sm md:text-base leading-relaxed italic">{result.summary}</p>
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-        <div className="px-6 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Full Transcript</span>
+      <div className="bg-white rounded-[24px] shadow-xl border border-gray-100 overflow-hidden">
+        <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+          <span className="text-[10px] md:text-xs font-black text-gray-400 uppercase tracking-widest">Transcript Editor</span>
+          <div className="flex items-center space-x-1">
+             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+             <span className="text-[10px] font-bold text-gray-400">Ready</span>
+          </div>
         </div>
         <textarea
           value={editedText}
           onChange={(e) => setEditedText(e.target.value)}
-          className="w-full h-96 p-6 focus:outline-none resize-none font-mono text-sm leading-relaxed text-gray-800"
+          className="w-full h-80 md:h-96 p-5 md:p-6 focus:outline-none resize-none font-mono text-xs md:text-sm leading-relaxed text-gray-800 bg-white"
           spellCheck={false}
+          placeholder="Transcription will appear here..."
         />
       </div>
     </div>
