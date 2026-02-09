@@ -26,7 +26,9 @@ import {
   Menu,
   X,
   Clapperboard,
-  Waves
+  Waves,
+  GraduationCap,
+  Gamepad2
 } from 'lucide-react';
 import FileUpload from './components/FileUpload.tsx';
 import TranscriptionResultView from './components/TranscriptionResult.tsx';
@@ -36,8 +38,9 @@ import Dashboard from './components/Dashboard.tsx';
 import Pricing from './components/Pricing.tsx';
 import PaymentModal from './components/PaymentModal.tsx';
 import TextToVoice from './components/TextToVoice.tsx';
-import ImageToVideo from './components/ImageToVideo.tsx';
 import VoiceEnhancer from './components/VoiceEnhancer.tsx';
+import EducationAnswer from './components/EducationAnswer.tsx';
+import EduGame from './components/EduGame.tsx';
 import { AppSettings, ProcessingStatus, TranscriptionResult, User, HistoryItem, ActiveTool, AppView, Package } from './types.ts';
 import { transcribeVideo } from './services/geminiService.ts';
 
@@ -68,8 +71,9 @@ const App: React.FC = () => {
     video: 0,
     audio: 0,
     tts: 0,
-    veo: 0,
-    enhancer: 0
+    enhancer: 0,
+    education: 0,
+    game: 0
   });
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -113,17 +117,18 @@ const App: React.FC = () => {
     if (activeTool === 'audio') return usage.audio;
     if (activeTool === 'tts') return usage.tts;
     if (activeTool === 'enhancer') return usage.enhancer;
-    return usage.veo;
+    if (activeTool === 'education') return usage.education;
+    if (activeTool === 'game') return usage.game;
+    return 0;
   }, [activeTool, usage]);
 
   const isLimitReached = useMemo(() => {
-    if (currentUser) return false; // Pro users have no limits
+    if (currentUser) return false;
     return currentUsage >= GLOBAL_FREE_LIMIT;
   }, [currentUser, currentUsage]);
 
   const startProcessing = async () => {
     if (!selectedFile) return;
-
     if (isLimitReached) {
       setView('pricing');
       return;
@@ -223,7 +228,7 @@ const App: React.FC = () => {
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
              <div className="p-6 bg-blue-50 rounded-full text-blue-600 mb-2"><LogIn className="w-12 h-12" /></div>
              <h2 className="text-2xl font-black text-gray-900">Sign in to view Dashboard</h2>
-             <p className="text-gray-500 max-w-xs">You need to be logged in to access your transcription history and statistics.</p>
+             <p className="text-gray-500 max-w-xs">You need to be logged in to access history and stats.</p>
              <button onClick={() => setActiveModal('signin')} className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg">Sign In Now</button>
           </div>
         );
@@ -233,6 +238,10 @@ const App: React.FC = () => {
 
     if (view === 'pricing') {
       return <Pricing onSubscribe={handleSubscribe} packages={PACKAGES} />;
+    }
+
+    if (view === 'game' || activeTool === 'game') {
+      return <EduGame />;
     }
 
     if (activeTool === 'tts') {
@@ -247,10 +256,10 @@ const App: React.FC = () => {
       );
     }
 
-    if (activeTool === 'image-to-video') {
+    if (activeTool === 'enhancer') {
       return (
-        <ImageToVideo 
-          minutesUsed={usage.veo}
+        <VoiceEnhancer 
+          minutesUsed={usage.enhancer}
           limitMinutes={GLOBAL_FREE_LIMIT}
           onUsageUpdate={(m) => handleUsageUpdate(m)}
           onUpgrade={() => setView('pricing')}
@@ -259,10 +268,10 @@ const App: React.FC = () => {
       );
     }
 
-    if (activeTool === 'enhancer') {
+    if (activeTool === 'education') {
       return (
-        <VoiceEnhancer 
-          minutesUsed={usage.enhancer}
+        <EducationAnswer 
+          minutesUsed={usage.education}
           limitMinutes={GLOBAL_FREE_LIMIT}
           onUsageUpdate={(m) => handleUsageUpdate(m)}
           onUpgrade={() => setView('pricing')}
@@ -418,31 +427,41 @@ const App: React.FC = () => {
                 <LayoutDashboard className="w-4 h-4" /><span>Dashboard</span>
               </button>
             )}
+            
+            {/* STANDALONE EDU GAME PLAY BUTTON BEFORE ALL TOOLS */}
+            <button 
+              onClick={() => { setActiveTool('game'); setView('game'); }} 
+              className={`flex items-center space-x-1.5 font-black transition-colors ${view === 'game' ? 'text-yellow-600' : 'text-gray-600 hover:text-yellow-600'}`}
+            >
+              <Gamepad2 className="w-4 h-4" />
+              <span>Edu Game Play</span>
+            </button>
+
             <div className="relative" ref={dropdownRef}>
               <button onClick={() => setIsOtherAppsOpen(!isOtherAppsOpen)} className={`flex items-center space-x-1 font-bold hover:text-blue-600 ${isOtherAppsOpen ? 'text-blue-600' : ''}`}>
                 <span>All Tools</span><ChevronDown className={`w-4 h-4 transition-transform ${isOtherAppsOpen ? 'rotate-180' : ''}`} />
               </button>
               {isOtherAppsOpen && (
                 <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[60]">
-                  <button onClick={() => { setActiveTool('video'); setView('transcribe'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50">
+                  <button onClick={() => { setActiveTool('education'); setView('education'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left">
+                    <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600"><GraduationCap className="w-4 h-4" /></div>
+                    <div><p className="font-bold text-gray-900 text-xs uppercase tracking-tighter">EduMaster AI</p></div>
+                  </button>
+                  <button onClick={() => { setActiveTool('video'); setView('transcribe'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left">
                     <div className="p-2 rounded-lg bg-blue-100 text-blue-600"><FileVideo className="w-4 h-4" /></div>
-                    <div><p className="font-bold text-gray-900">Video to Text</p></div>
+                    <div><p className="font-bold text-gray-900 text-xs">Video to Text</p></div>
                   </button>
-                  <button onClick={() => { setActiveTool('audio'); setView('transcribe'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50">
+                  <button onClick={() => { setActiveTool('audio'); setView('transcribe'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left">
                     <div className="p-2 rounded-lg bg-purple-100 text-purple-600"><AudioLines className="w-4 h-4" /></div>
-                    <div><p className="font-bold text-gray-900">Audio to Text</p></div>
+                    <div><p className="font-bold text-gray-900 text-xs">Audio to Text</p></div>
                   </button>
-                  <button onClick={() => { setActiveTool('tts'); setView('tts'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50">
+                  <button onClick={() => { setActiveTool('tts'); setView('tts'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left">
                     <div className="p-2 rounded-lg bg-green-100 text-green-600"><MessageSquareText className="w-4 h-4" /></div>
-                    <div><p className="font-bold text-gray-900">Text to Voice</p></div>
+                    <div><p className="font-bold text-gray-900 text-xs">Text to Voice</p></div>
                   </button>
-                  <button onClick={() => { setActiveTool('image-to-video'); setView('transcribe'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50">
-                    <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><Clapperboard className="w-4 h-4" /></div>
-                    <div><p className="font-bold text-gray-900">Image to Video</p></div>
-                  </button>
-                  <button onClick={() => { setActiveTool('enhancer'); setView('enhancer'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50">
+                  <button onClick={() => { setActiveTool('enhancer'); setView('enhancer'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left">
                     <div className="p-2 rounded-lg bg-blue-100 text-blue-600"><Waves className="w-4 h-4" /></div>
-                    <div><p className="font-bold text-gray-900">Voice Enhancer</p></div>
+                    <div><p className="font-bold text-gray-900 text-xs">Voice Enhancer</p></div>
                   </button>
                 </div>
               )}
@@ -475,10 +494,11 @@ const App: React.FC = () => {
           <div className="absolute right-0 top-0 h-full w-4/5 max-w-sm bg-white p-6 flex flex-col">
             <div className="flex justify-between items-center mb-10 border-b pb-4"><span className="font-bold text-gray-400 uppercase text-xs">Menu</span><button onClick={() => setIsMobileMenuOpen(false)}><X className="w-5 h-5" /></button></div>
             <div className="space-y-4 overflow-y-auto flex-1 text-sm">
+              <button onClick={() => { setActiveTool('game'); setView('game'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-black bg-yellow-50 text-yellow-700 shadow-sm border border-yellow-100"><Gamepad2 className="w-5 h-5" /><span>Edu Game Play</span></button>
+              <button onClick={() => { setActiveTool('education'); setView('education'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><GraduationCap className="w-5 h-5" /><span>EduMaster AI</span></button>
               <button onClick={() => { setActiveTool('video'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><FileVideo className="w-5 h-5" /><span>Video to Text</span></button>
               <button onClick={() => { setActiveTool('audio'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><AudioLines className="w-5 h-5" /><span>Audio to Text</span></button>
               <button onClick={() => { setActiveTool('tts'); setView('tts'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><MessageSquareText className="w-5 h-5" /><span>Text to Voice</span></button>
-              <button onClick={() => { setActiveTool('image-to-video'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><Clapperboard className="w-5 h-5" /><span>Image to Video</span></button>
               <button onClick={() => { setActiveTool('enhancer'); setView('enhancer'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><Waves className="w-5 h-5" /><span>Voice Enhancer</span></button>
               {currentUser && <button onClick={() => setView('dashboard')} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><LayoutDashboard className="w-5 h-5" /><span>Dashboard</span></button>}
               <button onClick={() => setView('pricing')} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><CreditCard className="w-5 h-5" /><span>Pricing</span></button>
@@ -489,9 +509,10 @@ const App: React.FC = () => {
       )}
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 lg:hidden flex justify-around items-center py-2 px-2 z-[80] shadow-lg">
+        <button onClick={() => { setActiveTool('game'); setView('game'); }} className={`flex flex-col items-center p-2 rounded-xl ${view === 'game' ? 'text-yellow-600' : 'text-gray-400'}`}><Gamepad2 className="w-6 h-6" /><span className="text-[10px] font-black mt-1 uppercase">Game</span></button>
         <button onClick={() => { setActiveTool('video'); setView('transcribe'); }} className={`flex flex-col items-center p-2 rounded-xl ${activeTool === 'video' && view === 'transcribe' ? 'text-blue-600' : 'text-gray-400'}`}><FileVideo className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Video</span></button>
         <button onClick={() => { setActiveTool('audio'); setView('transcribe'); }} className={`flex flex-col items-center p-2 rounded-xl ${activeTool === 'audio' && view === 'transcribe' ? 'text-blue-600' : 'text-gray-400'}`}><AudioLines className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Audio</span></button>
-        <button onClick={() => setView('enhancer')} className={`flex flex-col items-center p-2 rounded-xl ${view === 'enhancer' ? 'text-blue-600' : 'text-gray-400'}`}><Waves className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Clean</span></button>
+        <button onClick={() => { setActiveTool('education'); setView('education'); }} className={`flex flex-col items-center p-2 rounded-xl ${view === 'education' ? 'text-blue-600' : 'text-gray-400'}`}><GraduationCap className="w-6 h-6" /><span className="text-[10px] font-bold mt-1 uppercase">Edu</span></button>
         {currentUser && <button onClick={() => setView('dashboard')} className={`flex flex-col items-center p-2 rounded-xl ${view === 'dashboard' ? 'text-blue-600' : 'text-gray-400'}`}><LayoutDashboard className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Stats</span></button>}
       </div>
 
