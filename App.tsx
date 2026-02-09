@@ -241,7 +241,7 @@ const App: React.FC = () => {
     }
 
     if (view === 'game' || activeTool === 'game') {
-      return <EduGame />;
+      return <EduGame onBackToTools={() => { setView('transcribe'); setActiveTool('video'); }} />;
     }
 
     if (activeTool === 'tts') {
@@ -272,7 +272,7 @@ const App: React.FC = () => {
       return (
         <EducationAnswer 
           minutesUsed={usage.education}
-          limitMinutes={GLOBAL_FREE_LIMIT}
+          limitMinutes={GLOBAL_FREE_LIMIT} 
           onUsageUpdate={(m) => handleUsageUpdate(m)}
           onUpgrade={() => setView('pricing')}
           isPro={!!currentUser}
