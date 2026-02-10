@@ -28,7 +28,15 @@ import {
   Clapperboard,
   Waves,
   GraduationCap,
-  Gamepad2
+  Gamepad2,
+  ArrowRight,
+  Lightbulb,
+  Cpu,
+  MonitorPlay,
+  FileJson,
+  Languages,
+  MousePointerClick,
+  Rocket
 } from 'lucide-react';
 import FileUpload from './components/FileUpload.tsx';
 import TranscriptionResultView from './components/TranscriptionResult.tsx';
@@ -302,7 +310,9 @@ const App: React.FC = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 px-2 md:px-0">
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
+          
+          {/* 1. FILE UPLOAD (Order 1) */}
+          <div className="lg:col-span-2 space-y-4 order-1">
             <FileUpload 
               onFileSelect={handleFileSelect} 
               isProcessing={status !== 'idle' && status !== 'success' && status !== 'error'} 
@@ -325,18 +335,10 @@ const App: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {result && <TranscriptionResultView result={result} settings={settings} />}
-
-            {status === 'error' && (
-              <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center space-x-3">
-                <EarOff className="w-5 h-5" />
-                <p className="font-bold">Transcription Failed. Please try again.</p>
-              </div>
-            )}
           </div>
 
-          <div className="space-y-4 md:space-y-6">
+          {/* 2. SETTINGS CARD (Order 2 on mobile, Order 2 on desktop column 3) */}
+          <div className="lg:col-span-1 order-2 lg:order-2">
             <div className="bg-white p-5 md:p-6 rounded-2xl shadow-xl border border-gray-100">
               <div className="flex items-center space-x-2 mb-6 text-gray-400">
                 <SettingsIcon className="w-5 h-5" />
@@ -366,7 +368,7 @@ const App: React.FC = () => {
               <button
                 disabled={!selectedFile || (status !== 'idle' && status !== 'success' && status !== 'error')}
                 onClick={startProcessing}
-                className={`w-full mt-6 py-4 px-6 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg transition-all ${
+                className={`w-full mt-6 py-4 px-6 rounded-xl font-black flex items-center justify-center space-x-2 shadow-lg transition-all active:scale-95 ${
                   !selectedFile || (status !== 'idle' && status !== 'success' && status !== 'error')
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-blue-600 text-white hover:bg-blue-700"
@@ -376,7 +378,10 @@ const App: React.FC = () => {
                 <span>{status === 'success' ? 'New Transcription' : 'Start Processing'}</span>
               </button>
             </div>
+          </div>
 
+          {/* 3. PLAN STATUS CARD (Order 3 on mobile, Order 4 on desktop column 3) */}
+          <div className="lg:col-span-1 order-3 lg:order-4">
             <div className="bg-[#1a202c] p-5 md:p-6 rounded-[24px] shadow-2xl text-white border border-gray-800">
               <div className="flex items-center space-x-2 mb-6">
                 <BarChart3 className="w-5 h-5 text-blue-400" />
@@ -407,6 +412,162 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* 4. MAIN CONTENT (Order 4 on mobile, Order 3 on desktop column 1-2) */}
+          <div className="lg:col-span-2 space-y-8 order-4 lg:order-3">
+            {/* Fills the empty space when no results are shown */}
+            {status === 'idle' && !result && (
+              <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                
+                {/* How it Works Section */}
+                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-gray-100">
+                  <h3 className="text-xl font-black text-gray-900 mb-8 flex items-center space-x-3">
+                    <Rocket className="w-6 h-6 text-blue-600" />
+                    <span>দ্রুত ট্রান্সক্রাইব করার নিয়ম</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {[
+                      { step: '০১', icon: MousePointerClick, title: 'ফাইল সিলেক্ট', desc: 'আপনার ভিডিও বা অডিও ফাইলটি আপলোড করুন (সর্বোচ্চ ৫০০ এমবি)।', color: 'blue' },
+                      { step: '০২', icon: Cpu, title: 'AI প্রসেসিং', desc: 'আমাদের শক্তিশালী AI মুহূর্তেই আপনার কথাগুলো টেক্সটে রূপান্তর করবে।', color: 'indigo' },
+                      { step: '০৩', icon: FileJson, title: 'ডাউনলোড', desc: 'ট্রান্সক্রিপশন শেষ হলে TXT বা SRT ফরম্যাটে ডাউনলোড করে নিন।', color: 'emerald' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="relative group">
+                        <div className={`w-14 h-14 bg-${item.color}-50 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                          <item.icon className={`w-7 h-7 text-${item.color}-600`} />
+                        </div>
+                        <span className="absolute top-0 right-0 text-3xl font-black text-gray-50 opacity-50">{item.step}</span>
+                        <h4 className="font-black text-gray-800 text-lg mb-2">{item.title}</h4>
+                        <p className="text-sm text-gray-500 leading-relaxed font-medium">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Features Highlights Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gradient-to-br from-gray-900 to-slate-800 p-8 rounded-[40px] text-white shadow-xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[80px] opacity-20 -mr-10 -mt-10"></div>
+                    <div className="relative z-10">
+                      <div className="p-3 bg-white/10 rounded-xl w-fit mb-6"><Languages className="w-6 h-6 text-blue-400" /></div>
+                      <h4 className="text-xl font-black mb-3">নির্ভুল বাংলা ও ইংরেজি</h4>
+                      <p className="text-sm text-gray-400 leading-relaxed font-medium">বাংলা ও ইংরেজি উভয় ভাষাতেই আমাদের AI অত্যন্ত নির্ভুলভাবে কাজ করে। প্রফেশনাল ব্যবহারের জন্য এটি সেরা সমাধান।</p>
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 p-8 rounded-[40px] border border-blue-100 shadow-sm group hover:shadow-md transition-shadow">
+                    <div className="p-3 bg-white rounded-xl w-fit mb-6 shadow-sm"><SettingsIcon className="w-6 h-6 text-blue-600 group-hover:rotate-45 transition-transform duration-500" /></div>
+                    <h4 className="text-xl font-black text-blue-900 mb-3">অ্যাডভান্সড সেটিংস</h4>
+                    <p className="text-sm text-blue-700/70 leading-relaxed font-medium">স্পিকার ডিটেকশন, টাইমস্ট্যাম্প এবং নয়েজ রিমুভাল এর মতো সব প্রিমিয়াম ফিচার আপনি পাবেন একদম ফ্রি ট্রায়ালে।</p>
+                  </div>
+                </div>
+
+                {/* Format Support Banner */}
+                <div className="flex flex-wrap items-center justify-center gap-6 opacity-40 grayscale hover:grayscale-0 transition-all duration-700 px-4">
+                  <div className="flex items-center space-x-2"><MonitorPlay className="w-5 h-5" /><span className="text-sm font-bold uppercase tracking-widest">MP4 SUPPORT</span></div>
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <div className="flex items-center space-x-2"><AudioLines className="w-5 h-5" /><span className="text-sm font-bold uppercase tracking-widest">WAV SUPPORT</span></div>
+                  <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+                  <div className="flex items-center space-x-2"><Clapperboard className="w-5 h-5" /><span className="text-sm font-bold uppercase tracking-widest">MKV SUPPORT</span></div>
+                </div>
+
+              </div>
+            )}
+
+            {result && <TranscriptionResultView result={result} settings={settings} />}
+
+            {status === 'error' && (
+              <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center space-x-3">
+                <EarOff className="w-5 h-5" />
+                <p className="font-bold">Transcription Failed. Please try again.</p>
+              </div>
+            )}
+          </div>
+
+          {/* 5. FEATURE BLOG (Order 5 on mobile, Order 5 on desktop column 3) */}
+          <div className="lg:col-span-1 space-y-6 order-5 lg:order-5">
+            {/* FEATURE INSIGHTS / BLOG CONTENT SECTION */}
+            <div className="space-y-6 animate-in fade-in duration-1000 delay-300">
+               <div className="flex items-center space-x-2 px-2">
+                  <Lightbulb className="w-4 h-4 text-blue-500" />
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Our Magic Tools</span>
+               </div>
+
+               {/* EduMaster Blog Card */}
+               <div className="group bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-indigo-50 rounded-full group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shadow-inner">
+                      <GraduationCap className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <h4 className="text-lg font-black text-gray-900 mb-2">EduMaster AI Solution</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed font-medium mb-5">আপনার যেকোনো জটিল পড়াশোনার সমস্যার সমাধান দিবে আমাদের AI। বিজ্ঞান, ধর্ম কিংবা সাধারণ জ্ঞান—যেকোনো প্রশ্ন লিখে বা ছবি তুলে পাঠালেই পাবেন নির্ভুল ব্যাখ্যাসহ উত্তর।</p>
+                    <button 
+                      onClick={() => { setActiveTool('education'); setView('education'); }}
+                      className="flex items-center space-x-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest hover:translate-x-1 transition-transform"
+                    >
+                      <span>Explore EduMaster</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+               </div>
+
+               {/* Video to Text Blog Card */}
+               <div className="group bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 group-hover:-rotate-12 transition-transform shadow-inner">
+                      <FileVideo className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <h4 className="text-lg font-black text-gray-900 mb-2">Transcribe Any Content</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed font-medium mb-5">মিটিং নোট, লেকচার বা ইউটিউব ভিডিও—সবকিছু মুহূর্তেই টেক্সটে রূপান্তর করুন। স্পিকার ডিটেকশন ও অটোমেটিক সামারি ফিচার আপনার কাজকে করে তুলবে সহজ ও দ্রুততম।</p>
+                    <button 
+                      onClick={() => { setActiveTool('video'); setView('transcribe'); }}
+                      className="flex items-center space-x-2 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:translate-x-1 transition-transform"
+                    >
+                      <span>Start Transcribing</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+               </div>
+
+               {/* Voice Studio Blog Card */}
+               <div className="group bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-inner">
+                      <MessageSquareText className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <h4 className="text-lg font-black text-gray-900 mb-2">Natural AI Voice Studio</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed font-medium mb-5">আমাদের টেক্সট-টু-ভয়েস টুলের মাধ্যমে যেকোনো লেখাকে দিন প্রাণবন্ত কণ্ঠস্বর। বিশেষ করে ঢাকা সিটির ন্যাচারাল অ্যাকসেন্টে ভয়েস ওভার তৈরি করুন সোশ্যাল মিডিয়া বা প্রেজেন্টেশনের জন্য।</p>
+                    <button 
+                      onClick={() => { setActiveTool('tts'); setView('tts'); }}
+                      className="flex items-center space-x-2 text-emerald-600 font-black text-[10px] uppercase tracking-widest hover:translate-x-1 transition-transform"
+                    >
+                      <span>Create Voiceover</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+               </div>
+
+               {/* Enhancer Blog Card */}
+               <div className="group bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-purple-50 rounded-full group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center mb-4 group-hover:rotate-6 transition-transform shadow-inner">
+                      <Waves className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <h4 className="text-lg font-black text-gray-900 mb-2">Voice Quality Enhancer</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed font-medium mb-5">সাধারণ ফোনে রেকর্ড করা নয়েজযুক্ত শব্দকে করুন একদম স্টুডিও কোয়ালিটি। আমাদের AI অটোমেটিকালি ব্যাকগ্রাউন্ড নয়েজ রিমুভ করে ভয়েস টোনকে করে তুলবে প্রফেশনাল ও স্পষ্ট।</p>
+                    <button 
+                      onClick={() => { setActiveTool('enhancer'); setView('enhancer'); }}
+                      className="flex items-center space-x-2 text-purple-600 font-black text-[10px] uppercase tracking-widest hover:translate-x-1 transition-transform"
+                    >
+                      <span>Fix My Audio</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+               </div>
+            </div>
+          </div>
         </div>
       </>
     );
@@ -428,7 +589,6 @@ const App: React.FC = () => {
               </button>
             )}
             
-            {/* STANDALONE EDU GAME PLAY BUTTON BEFORE ALL TOOLS */}
             <button 
               onClick={() => { setActiveTool('game'); setView('game'); }} 
               className={`flex items-center space-x-1.5 font-black transition-colors ${view === 'game' ? 'text-yellow-600' : 'text-gray-600 hover:text-yellow-600'}`}
