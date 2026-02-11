@@ -13,8 +13,8 @@ export interface TranscriptionResult {
 }
 
 export type ProcessingStatus = 'idle' | 'uploading' | 'extracting' | 'transcribing' | 'finalizing' | 'success' | 'error' | 'generating';
-export type ActiveTool = 'video' | 'audio' | 'tts' | 'enhancer' | 'education' | 'game';
-export type AppView = 'transcribe' | 'dashboard' | 'profile' | 'pricing' | 'tts' | 'enhancer' | 'education' | 'game';
+export type ActiveTool = 'video' | 'audio' | 'tts' | 'enhancer' | 'education' | 'game' | 'qr';
+export type AppView = 'transcribe' | 'dashboard' | 'profile' | 'pricing' | 'tts' | 'enhancer' | 'education' | 'game' | 'qr';
 
 export interface AppSettings {
   showTimestamps: boolean;

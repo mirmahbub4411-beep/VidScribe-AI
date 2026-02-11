@@ -36,7 +36,8 @@ import {
   FileJson,
   Languages,
   MousePointerClick,
-  Rocket
+  Rocket,
+  QrCode
 } from 'lucide-react';
 import FileUpload from './components/FileUpload.tsx';
 import TranscriptionResultView from './components/TranscriptionResult.tsx';
@@ -49,6 +50,7 @@ import TextToVoice from './components/TextToVoice.tsx';
 import VoiceEnhancer from './components/VoiceEnhancer.tsx';
 import EducationAnswer from './components/EducationAnswer.tsx';
 import EduGame from './components/EduGame.tsx';
+import SmartQRGenerator from './components/SmartQRGenerator.tsx';
 import { AppSettings, ProcessingStatus, TranscriptionResult, User, HistoryItem, ActiveTool, AppView, Package } from './types.ts';
 import { transcribeVideo } from './services/geminiService.ts';
 
@@ -81,7 +83,8 @@ const App: React.FC = () => {
     tts: 0,
     enhancer: 0,
     education: 0,
-    game: 0
+    game: 0,
+    qr: 0
   });
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -127,13 +130,16 @@ const App: React.FC = () => {
     if (activeTool === 'enhancer') return usage.enhancer;
     if (activeTool === 'education') return usage.education;
     if (activeTool === 'game') return usage.game;
+    if (activeTool === 'qr') return usage.qr;
     return 0;
   }, [activeTool, usage]);
 
   const isLimitReached = useMemo(() => {
     if (currentUser) return false;
+    // QR generator doesn't count against time limit for now
+    if (activeTool === 'qr') return false;
     return currentUsage >= GLOBAL_FREE_LIMIT;
-  }, [currentUser, currentUsage]);
+  }, [currentUser, currentUsage, activeTool]);
 
   const startProcessing = async () => {
     if (!selectedFile) return;
@@ -250,6 +256,10 @@ const App: React.FC = () => {
 
     if (view === 'game' || activeTool === 'game') {
       return <EduGame onBackToTools={() => { setView('transcribe'); setActiveTool('video'); }} />;
+    }
+
+    if (view === 'qr' || activeTool === 'qr') {
+      return <SmartQRGenerator />;
     }
 
     if (activeTool === 'tts') {
@@ -491,6 +501,25 @@ const App: React.FC = () => {
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Our Magic Tools</span>
                </div>
 
+               {/* Smart QR Card */}
+               <div className="group bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden relative">
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
+                  <div className="relative z-10">
+                    <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shadow-inner">
+                      <QrCode className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <h4 className="text-lg font-black text-gray-900 mb-2">Smart QR Generator</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed font-medium mb-5">ব্যবসায়িক বা ব্যক্তিগত ব্যবহারের জন্য তৈরি করুন প্রফেশনাল কিউআর কোড। লোগো যুক্ত করা, কন্টাক্ট কার্ড তৈরি এবং মেয়াদ সেট করার মতো সব স্মার্ট ফিচার এখন একই সাথে।</p>
+                    <button 
+                      onClick={() => { setActiveTool('qr'); setView('qr'); }}
+                      className="flex items-center space-x-2 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:translate-x-1 transition-transform"
+                    >
+                      <span>Create Smart QR</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+               </div>
+
                {/* EduMaster Blog Card */}
                <div className="group bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden relative">
                   <div className="absolute -top-4 -right-4 w-20 h-20 bg-indigo-50 rounded-full group-hover:scale-150 transition-transform duration-700 pointer-events-none"></div>
@@ -603,6 +632,10 @@ const App: React.FC = () => {
               </button>
               {isOtherAppsOpen && (
                 <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-[60]">
+                  <button onClick={() => { setActiveTool('qr'); setView('qr'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left border-b border-gray-50 pb-2">
+                    <div className="p-2 rounded-lg bg-orange-100 text-orange-600"><QrCode className="w-4 h-4" /></div>
+                    <div><p className="font-bold text-gray-900 text-xs">Smart QR Generator</p></div>
+                  </button>
                   <button onClick={() => { setActiveTool('education'); setView('education'); setIsOtherAppsOpen(false); }} className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-blue-50 text-left">
                     <div className="p-2 rounded-lg bg-indigo-100 text-indigo-600"><GraduationCap className="w-4 h-4" /></div>
                     <div><p className="font-bold text-gray-900 text-xs uppercase tracking-tighter">EduMaster AI</p></div>
@@ -656,6 +689,7 @@ const App: React.FC = () => {
             <div className="space-y-4 overflow-y-auto flex-1 text-sm">
               <button onClick={() => { setActiveTool('game'); setView('game'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-black bg-yellow-50 text-yellow-700 shadow-sm border border-yellow-100"><Gamepad2 className="w-5 h-5" /><span>Edu Game Play</span></button>
               <button onClick={() => { setActiveTool('education'); setView('education'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><GraduationCap className="w-5 h-5" /><span>EduMaster AI</span></button>
+              <button onClick={() => { setActiveTool('qr'); setView('qr'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50 text-orange-600"><QrCode className="w-5 h-5" /><span>Smart QR Generator</span></button>
               <button onClick={() => { setActiveTool('video'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><FileVideo className="w-5 h-5" /><span>Video to Text</span></button>
               <button onClick={() => { setActiveTool('audio'); setView('transcribe'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><AudioLines className="w-5 h-5" /><span>Audio to Text</span></button>
               <button onClick={() => { setActiveTool('tts'); setView('tts'); }} className="w-full flex items-center space-x-3 p-4 rounded-xl font-bold hover:bg-gray-50"><MessageSquareText className="w-5 h-5" /><span>Text to Voice</span></button>
@@ -670,10 +704,10 @@ const App: React.FC = () => {
 
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 lg:hidden flex justify-around items-center py-2 px-2 z-[80] shadow-lg">
         <button onClick={() => { setActiveTool('game'); setView('game'); }} className={`flex flex-col items-center p-2 rounded-xl ${view === 'game' ? 'text-yellow-600' : 'text-gray-400'}`}><Gamepad2 className="w-6 h-6" /><span className="text-[10px] font-black mt-1 uppercase">Game</span></button>
+        <button onClick={() => { setActiveTool('qr'); setView('qr'); }} className={`flex flex-col items-center p-2 rounded-xl ${view === 'qr' ? 'text-orange-600' : 'text-gray-400'}`}><QrCode className="w-6 h-6" /><span className="text-[10px] font-bold mt-1 uppercase">QR</span></button>
         <button onClick={() => { setActiveTool('video'); setView('transcribe'); }} className={`flex flex-col items-center p-2 rounded-xl ${activeTool === 'video' && view === 'transcribe' ? 'text-blue-600' : 'text-gray-400'}`}><FileVideo className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Video</span></button>
         <button onClick={() => { setActiveTool('audio'); setView('transcribe'); }} className={`flex flex-col items-center p-2 rounded-xl ${activeTool === 'audio' && view === 'transcribe' ? 'text-blue-600' : 'text-gray-400'}`}><AudioLines className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Audio</span></button>
         <button onClick={() => { setActiveTool('education'); setView('education'); }} className={`flex flex-col items-center p-2 rounded-xl ${view === 'education' ? 'text-blue-600' : 'text-gray-400'}`}><GraduationCap className="w-6 h-6" /><span className="text-[10px] font-bold mt-1 uppercase">Edu</span></button>
-        {currentUser && <button onClick={() => setView('dashboard')} className={`flex flex-col items-center p-2 rounded-xl ${view === 'dashboard' ? 'text-blue-600' : 'text-gray-400'}`}><LayoutDashboard className="w-6 h-6" /><span className="text-[10px] font-bold mt-1">Stats</span></button>}
       </div>
 
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-6 md:py-8">
